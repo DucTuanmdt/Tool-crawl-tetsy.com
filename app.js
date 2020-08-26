@@ -3,10 +3,10 @@ let app = express();
 let router = require("./router")
 var bodyParser = require('body-parser')
 let lib = require("./lib")
-
+let utils = require("./utils")
 // init global variable
 global.lib = lib
-
+global.utils = utils
 // define router
 app.use(
   bodyParser.json(),
