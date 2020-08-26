@@ -3,7 +3,7 @@ let app = express();
 let router = require("./router")
 var bodyParser = require('body-parser')
 let lib = require("./lib")
-
+const port = process.env.PORT || 3000;
 // init global variable
 global.lib = lib
 
@@ -20,6 +20,6 @@ app.use("/", router)
 
 
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`App is running on port: ${process.env.PORT || 3000}`)
+app.listen(port, () => {
+  console.log(`App is running on port: ${port} | http://localhost:${port}`)
 });
