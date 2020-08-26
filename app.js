@@ -4,6 +4,7 @@ let router = require("./router")
 var bodyParser = require('body-parser')
 let lib = require("./lib")
 let utils = require("./utils")
+const port = process.env.PORT || 3000;
 // init global variable
 global.lib = lib
 global.utils = utils
@@ -20,6 +21,6 @@ app.use("/", router)
 
 
 
-app.listen(process.env.PORT || 3000, () => {
-  console.log(`App is running on port: ${process.env.PORT || 3000}`)
+app.listen(port, () => {
+  console.log(`App is running on port: ${port} | http://localhost:${port}`)
 });
