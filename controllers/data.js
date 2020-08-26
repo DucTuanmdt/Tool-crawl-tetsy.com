@@ -20,6 +20,7 @@ async function crawlOneProduct(url) {
 
     const results = await page.evaluate(() => {
         const nameEl = document.querySelector("h1.wt-text-body-03.wt-line-height-tight.wt-break-word.wt-mb-xs-1") || {};
+        const shopNameEl = document.querySelector("a.wt-text-link-no-underline > span") || {};
         const descriptionEl = document.querySelector("div[id='wt-content-toggle-product-details-read-more'] > p") || {};
         const priceEl = document.querySelector("div.wt-display-flex-xs.wt-align-items-center > p.wt-text-title-03.wt-mr-xs-2") || {};
         const tagsEl = [...document.querySelectorAll("div#wt-content-toggle-tags-read-more a")];
@@ -28,6 +29,7 @@ async function crawlOneProduct(url) {
 
         return {
             Name: nameEl.innerText,
+            ShopName: shopNameEl.innerText,
             Description: descriptionEl.innerHTML,
             Price: priceEl.innerText,
             Tags: tagsEl.map(v => v.innerText).join(","),
