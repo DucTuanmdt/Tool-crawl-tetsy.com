@@ -1,10 +1,2 @@
-const express = require("express");
-const router = express.Router();
-
-// page
-router.use("/", require("./page"))
-
-// api
-router.use("/data", require("./data"))
-
-module.exports = router;
+let controller=require("require-all")(__dirname)
+module.exports=controller
