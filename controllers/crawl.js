@@ -1,5 +1,6 @@
 const path = require("path");
-const fs = require('fs-extra')
+const fs = require('fs-extra');
+const services = require("../services");
 const root_dir = path.dirname(require.main.filename)
 
 exports.getOneProduct = async function (req, res) {
@@ -17,6 +18,7 @@ exports.getLinkProducts = async function (req, res) {
 }
 
 exports.crawlAllProduct = async function (req, res) {
+    res.send(true)
     console.time("TimeCrawl")
     const listAllProduct = [];
     const listLinkCategory = lib.generateListCategoryUrls(req.body.url, req.body.pageStart, req.body.pageEnd);
@@ -25,15 +27,17 @@ exports.crawlAllProduct = async function (req, res) {
     // quantity of page product-detail run together at the same time
     const quantity = Number(req.body.quantity || 5);
     const fileName = req.body.fileName;
-    console.log(quantity, fileName)
     let countPageCrawled = 0;
     let globalCount = 0;
 
-    for (const url of listLinkCategory) {
-        const {
-            category,
-            linkProduct
-        } = await lib.crawlLinkProducts(browser, url);
+    const listCategoryPage = [];
+    if (listLinkCategory.length > 0) {
+        const res = await lib.crawlLinkProducts(browser, listLinkCategory[0]);
+        listCategoryPage.push(res);
+        lib.getRemainLinkProduct(browser, listCategoryPage, listLinkCategory);
+    }
+
+    for (const { category, linkProduct } of listCategoryPage) {
 
         let index = 0;
         while (index < linkProduct.length) {
@@ -45,14 +49,19 @@ exports.crawlAllProduct = async function (req, res) {
             index += quantity;
             listAllProduct.push(...res)
         }
-        console.log("Finish page ", ++countPageCrawled)
+        countPageCrawled++;
+
+        console.log("Finish page ", countPageCrawled)
+        services.socket.send(fileName, "done-page", {
+            page: countPageCrawled
+        });
     }
     await lib.browser.close(browser);
 
     console.timeEnd("TimeCrawl")
 
     // write to json
-    const filePath = path.join(root_dir + "/export/data.json")
+    const filePath = path.join(root_dir + "/export/" + fileName + ".json")
     try {
         await fs.outputJson(filePath, listAllProduct)
     } catch (err) {
@@ -70,5 +79,9 @@ exports.crawlAllProduct = async function (req, res) {
         return results;
     }
 
-    res.send(listAllProduct)
+    await lib.createCSVFileFromJsonFile(fileName)
+    services.socket.send(fileName, "done", {
+        fileName
+    });
+
 }

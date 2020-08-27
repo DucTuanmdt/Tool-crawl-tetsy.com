@@ -15,6 +15,6 @@ exports.init = ()=>{
     });
 }
 
-exports.send = (room, msg)=>{
-    io.sockets.in(room).emit('event', msg);
+exports.send = (room, event,  msg)=>{
+    io.sockets.in(room).emit(event, msg);
 }
