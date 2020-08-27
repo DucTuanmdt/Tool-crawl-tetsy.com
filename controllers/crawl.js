@@ -1,5 +1,7 @@
 const path = require("path");
-const fs = require('fs-extra')
+const fs = require('fs-extra');
+const services = require("../services");
+const { count } = require("console");
 const root_dir = path.dirname(require.main.filename)
 
 exports.getOneProduct = async function (req, res) {
@@ -17,6 +19,7 @@ exports.getLinkProducts = async function (req, res) {
 }
 
 exports.crawlAllProduct = async function (req, res) {
+    res.send(true)
     console.time("TimeCrawl")
     const listAllProduct = [];
     const listLinkCategory = lib.generateListCategoryUrls(req.body.url, req.body.pageStart, req.body.pageEnd);
@@ -36,7 +39,8 @@ exports.crawlAllProduct = async function (req, res) {
         } = await lib.crawlLinkProducts(browser, url);
 
         let index = 0;
-        while (index < linkProduct.length) {
+        // while (index < linkProduct.length) {
+        while (index < 5) {
             let res = await crawlParallel(linkProduct, index, quantity)
             res = res.filter(v => v !== null).map(v => {
                 v.Category = category;
@@ -45,7 +49,10 @@ exports.crawlAllProduct = async function (req, res) {
             index += quantity;
             listAllProduct.push(...res)
         }
-        console.log("Finish page ", ++countPageCrawled)
+        countPageCrawled++;
+
+        console.log("Finish page ", countPageCrawled)
+        services.socket.send(fileName, "done-page", {page: countPageCrawled});
     }
     await lib.browser.close(browser);
 
@@ -70,5 +77,7 @@ exports.crawlAllProduct = async function (req, res) {
         return results;
     }
 
-    res.send(listAllProduct)
+
+    services.socket.send(fileName, "done", {fileName});
+
 }

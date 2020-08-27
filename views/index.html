@@ -27,7 +27,7 @@
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
-
+    <script src="/socket.io/socket.io.js"></script>
 
     <style>
         .result-container {
@@ -123,14 +123,26 @@
                 pageStart: 1,
                 pageEnd: 2,
                 quantity: 6,
+                socket: null,
             }),
             mounted() {
                 console.log("MOUNTED")
+                this.socket = io();
+                this.registerSocketEvent();
             },
             methods: {
+                registerSocketEvent() {
+                    this.socket.on("done", data => {
+                        console.log("Done", data)
+                    })
+                    this.socket.on("done-page", data => {
+                        console.log("Done-page", data)
+                    })
+                },
                 crawlData() {
                     this.isCrawling = true
                     const fileName = "F_" + (+new Date);
+                    this.socket.emit("join", fileName)
                     const data = {
                         url: this.url,
                         pageStart: this.pageStart,
