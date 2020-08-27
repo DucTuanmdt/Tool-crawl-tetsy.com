@@ -4,7 +4,7 @@ let router = require("./router")
 var bodyParser = require('body-parser')
 let lib = require("./lib")
 let utils = require("./utils")
-const port = process.env.PORT || 3000;
+const port = process.env.PORT || 5001;
 // init global variable
 global.lib = lib
 global.utils = utils
@@ -17,9 +17,6 @@ app.use(
 )
 app.use(express.static(__dirname + "/public"))
 app.use("/", router)
-
-
-
 
 app.listen(port, () => {
   console.log(`App is running on port: ${port} | http://localhost:${port}`)
