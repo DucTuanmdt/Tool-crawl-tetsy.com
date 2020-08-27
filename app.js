@@ -11,7 +11,7 @@ global.utils = utils
 // define router
 app.use(
   bodyParser.json(),
-  bodyParser.urlencoded({ 
+  bodyParser.urlencoded({
     extended: true
   })
 )
