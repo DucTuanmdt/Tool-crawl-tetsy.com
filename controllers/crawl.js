@@ -1,7 +1,6 @@
 const path = require("path");
 const fs = require('fs-extra');
 const services = require("../services");
-const { count } = require("console");
 const root_dir = path.dirname(require.main.filename)
 
 exports.getOneProduct = async function (req, res) {
@@ -31,15 +30,17 @@ exports.crawlAllProduct = async function (req, res) {
     let countPageCrawled = 0;
     let globalCount = 0;
 
-    for (const url of listLinkCategory) {
-        const {
-            category,
-            linkProduct
-        } = await lib.crawlLinkProducts(browser, url);
+    const listCategoryPage = [];
+    if (listLinkCategory.length > 0) {
+        const res = await lib.crawlLinkProducts(browser, listLinkCategory[0]);
+        listCategoryPage.push(res);
+        lib.getRemainLinkProduct(browser, listCategoryPage, listLinkCategory);
+    }
+
+    for (const { category, linkProduct } of listCategoryPage) {
 
         let index = 0;
-        // while (index < linkProduct.length) {
-        while (index < 5) {
+        while (index < linkProduct.length) {
             let res = await crawlParallel(linkProduct, index, quantity)
             res = res.filter(v => v !== null).map(v => {
                 v.Category = category;
@@ -51,7 +52,9 @@ exports.crawlAllProduct = async function (req, res) {
         countPageCrawled++;
 
         console.log("Finish page ", countPageCrawled)
-        services.socket.send(fileName, "done-page", {page: countPageCrawled});
+        services.socket.send(fileName, "done-page", {
+            page: countPageCrawled
+        });
     }
     await lib.browser.close(browser);
 
@@ -77,6 +80,8 @@ exports.crawlAllProduct = async function (req, res) {
     }
 
     await lib.createCSVFileFromJsonFile(fileName)
-    services.socket.send(fileName, "done", {fileName});
+    services.socket.send(fileName, "done", {
+        fileName
+    });
 
 }

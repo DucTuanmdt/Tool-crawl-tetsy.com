@@ -20,9 +20,7 @@
         integrity="sha512-qGCpIvwxHC+Hucq43TccM9nB6PlPTU9XgFPI0Ccth0oPfJwJljzl31I0cDaXL6+Xyq7BJ1CH/QYg09D0vf3pIg=="
         crossorigin="anonymous" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.14.0/css/all.min.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/styles/default.min.css" />
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.4.0/highlight.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/vue@2.6.11"></script>
     <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
@@ -48,7 +46,6 @@
 </head>
 
 <body>
-
     <nav class="navbar navbar-expand-lg navbar-dark bg-secondary py-0">
         <div class="container">
             <a class="navbar-brand" href="/">Crawl Etsy.com</a>
@@ -73,8 +70,8 @@
                 <label for="internet">Internet speed:</label>
                 <select v-model="quantity" name="internet" class="mx-2">
                     <option value="4">Slow</option>
-                    <option value="6">Medium</option>
-                    <option value="8">Fast</option>
+                    <option value="8">Medium</option>
+                    <option value="12">Fast</option>
                 </select>
             </form>
 
@@ -87,32 +84,25 @@
                         Crawl data
                     </span>
                 </button>
-
             </div>
         </div>
-
-        <div v-show="listResult" class="card my-4">
-            <!-- <div v-show="listResult && listResult.length" class="card my-4"> -->
-            <h3 class="text-center text-info mt-2 mb-0">Results: {{listResult.length}} record<span
-                    v-if="listResult.length > 1">s</span></h3>
-            <div class="d-flex justify-content-end top-result mt-1">
-                <button class="btn btn-sm button-copy m-2 btn-info" @click="copyResult">Copy</button>
-                <a ref="downloadLink" download="data.json" href="">
-                    <button class="btn btn-sm button-copy m-2 btn-info" @click="copyResult">Download</button>
-                </a>
-            </div>
-            <div class="result-container">
-                <code class="JSON">
-                    <pre v-html="jsonResult"></pre>
-                </code>
+        <div v-show="progressBar.show">
+            <p class="text-center my-2">Completed &nbsp; {{progressBar.donePage}} / {{progressBar.totalPage}} &nbsp;
+                pages</p>
+            <div class="progress">
+                <div class="progress-bar progress-bar-striped"
+                    :class="progressBar.donePage >= progressBar.totalPage ? 'bg-success' : 'bg-info progress-bar-animated'" role="progressbar"
+                    :aria-valuenow="progressBar.value" aria-valuemin="0" aria-valuemax="100"
+                    :style="{width: progressBar.value + '%'}">
+                </div>
             </div>
         </div>
     </div>
+
     <div class=" p-1 bg-secondary no-radius fixed-bottom">
         <h6 class="text-center text-white"><small>Powered by MDT & NVV</small> <span class="h5">☘️</span> </h6>
     </div>
     <script>
-        Vue.use(hljs);
         const app = new Vue({
             el: "#app",
             data: () => ({
@@ -122,8 +112,15 @@
                 isCrawling: false,
                 pageStart: 1,
                 pageEnd: 2,
-                quantity: 6,
+                quantity: 4,
                 socket: null,
+                progressBar: {
+                    show: false,
+                    totalPage: 1,
+                    donePage: 0,
+                    value: 0
+                },
+                intervalProgress: null,
             }),
             mounted() {
                 console.log("MOUNTED")
@@ -133,16 +130,23 @@
             methods: {
                 registerSocketEvent() {
                     this.socket.on("done", data => {
-                        console.log("Done", data)
+                        console.log("Done all", data)
+                        this.isCrawling = false;
+                        this.downloadFile(data.fileName)
+                        clearInterval(this.intervalProgress);
+                        this.intervalProgress = null;
                     })
                     this.socket.on("done-page", data => {
                         console.log("Done-page", data)
+                        this.progressBar.donePage++;
+                        this.progressBar.value = data.page / this.progressBar.totalPage * 100;
                     })
                 },
                 crawlData() {
                     this.isCrawling = true
                     const fileName = "F_" + (+new Date);
                     this.socket.emit("join", fileName)
+
                     const data = {
                         url: this.url,
                         pageStart: this.pageStart,
@@ -154,36 +158,45 @@
                             console.log("res", res)
                             if (res.status == 200) {
                                 this.listResult = res.data;
-                                this.hightLightJson();
-                                this.createDownloadLink();
+                                this.initProgressBar();
                             }
                         })
                         .catch(err => {
                             console.log("Error: ", err)
                         })
-                        .finally(() => {
-                            this.isCrawling = false;
-                        })
                 },
-                hightLightJson() {
-                    const stringFormat = JSON.stringify(this.listResult, null, 4)
-                    this.jsonResult = hljs.highlightAuto(stringFormat).value.trim()
-                },
-                copyResult() {
-                    const input = document.createElement('input');
-                    input.setAttribute('value', JSON.stringify(this.listResult));
-                    document.body.appendChild(input);
-                    input.select();
-                    const result = document.execCommand('copy');
-                    document.body.removeChild(input);
-                },
-                createDownloadLink() {
-                    const content = JSON.stringify(this.listResult);
-                    const data = new Blob([content], {
-                        type: "text/plain"
+                downloadFile(fileName) {
+                    axios({
+                        url: `/api/download/${fileName}`,
+                        method: 'GET',
+                        responseType: 'blob', // important
+                    }).then((res) => {
+                        if (res.status == 200) {
+                            const url = window.URL.createObjectURL(new Blob([res.data]));
+                            const link = document.createElement('a');
+                            link.href = url;
+                            link.setAttribute('download', `${fileName}.csv`);
+                            document.body.appendChild(link);
+                            link.click();
+                        } else {
+                            console.log("Can not download", err);
+                        }
+                    }).catch(err => {
+                        console.log("Can not download", err);
                     });
-                    const url = window.URL.createObjectURL(data);
-                    this.$refs.downloadLink.href = url;
+                },
+                initProgressBar() {
+                    this.progressBar.show = true;
+                    this.progressBar.totalPage = this.pageEnd - this.pageStart + 1;
+                    this.progressBar.donePage = 0;
+                    this.progressBar.value = 0;
+
+                    this.intervalProgress = setInterval(() => {
+                        const pageSegementValue = 100 / this.progressBar.totalPage * (this.progressBar.donePage + 1);
+                        let subNumber = (Math.floor(Math.random() * (5)) + 1) / (25 * this.progressBar.totalPage) ;
+                        if (this.progressBar.value + subNumber < pageSegementValue)
+                        this.progressBar.value += subNumber;
+                    }, 100);
                 }
             },
             computed: {
