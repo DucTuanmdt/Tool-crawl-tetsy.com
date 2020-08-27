@@ -28,7 +28,6 @@ exports.crawlAllProduct = async function (req, res) {
     // quantity of page product-detail run together at the same time
     const quantity = Number(req.body.quantity || 5);
     const fileName = req.body.fileName;
-    console.log(quantity, fileName)
     let countPageCrawled = 0;
     let globalCount = 0;
 
@@ -59,7 +58,7 @@ exports.crawlAllProduct = async function (req, res) {
     console.timeEnd("TimeCrawl")
 
     // write to json
-    const filePath = path.join(root_dir + "/export/data.json")
+    const filePath = path.join(root_dir + "/export/" + fileName + ".json")
     try {
         await fs.outputJson(filePath, listAllProduct)
     } catch (err) {
@@ -77,7 +76,7 @@ exports.crawlAllProduct = async function (req, res) {
         return results;
     }
 
-
+    await lib.createCSVFileFromJsonFile(fileName)
     services.socket.send(fileName, "done", {fileName});
 
 }
