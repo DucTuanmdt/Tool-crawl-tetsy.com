@@ -6,7 +6,7 @@ const controller = require("../controllers/index")
 router.get("/", controller.page.index)
 router.get("/test", controller.page.test)
 // api crawl data
-router.post("/data", controller.crawl.getLinkProducts)
+router.post("/data", controller.crawl.crawlAllProduct)
 
 
 

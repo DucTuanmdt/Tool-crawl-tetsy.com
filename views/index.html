@@ -42,7 +42,7 @@
         }
 
         .page-input {
-            width: 3rem;
+            width: 3.5rem;
         }
     </style>
 </head>
@@ -70,6 +70,12 @@
                 <label for="to-page">To page:</label>
                 <input v-model="pageEnd" class=" page-input mx-2" type="number" class="form-control" id="to-page"
                     name="to-page" size="4" min="1" maxlength="4">
+                <label for="internet">Internet speed:</label>
+                <select v-model="quantity" name="internet" class="mx-2">
+                    <option value="4">Slow</option>
+                    <option value="6">Medium</option>
+                    <option value="8">Fast</option>
+                </select>
             </form>
 
             <div>
@@ -86,7 +92,7 @@
         </div>
 
         <div v-show="listResult" class="card my-4">
-        <!-- <div v-show="listResult && listResult.length" class="card my-4"> -->
+            <!-- <div v-show="listResult && listResult.length" class="card my-4"> -->
             <h3 class="text-center text-info mt-2 mb-0">Results: {{listResult.length}} record<span
                     v-if="listResult.length > 1">s</span></h3>
             <div class="d-flex justify-content-end top-result mt-1">
@@ -115,7 +121,8 @@
                 listResult: [],
                 isCrawling: false,
                 pageStart: 1,
-                pageEnd: 2
+                pageEnd: 2,
+                quantity: 6,
             }),
             mounted() {
                 console.log("MOUNTED")
@@ -123,10 +130,13 @@
             methods: {
                 crawlData() {
                     this.isCrawling = true
+                    const fileName = "F_" + (+new Date);
                     const data = {
                         url: this.url,
                         pageStart: this.pageStart,
-                        pageEnd: this.pageEnd
+                        pageEnd: this.pageEnd,
+                        quantity: this.quantity,
+                        fileName,
                     }
                     axios.post("/data", data).then(res => {
                             console.log("res", res)
@@ -166,7 +176,7 @@
             },
             computed: {
                 enableCrawl() {
-                    return this.url && this.pageStart <= this.pageEnd;
+                    return this.url && this.pageStart && this.pageEnd && this.pageStart <= this.pageEnd;
                 },
             }
         })
