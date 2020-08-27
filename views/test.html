@@ -1,0 +1,16 @@
+<!DOCTYPE html>
+<html>
+   <head>
+      <title>Hello world</title>
+   </head>
+   <script src = "/socket.io/socket.io.js"></script>
+   
+   <script>
+      var socket = io();
+   socket.emit('join', 'room1');
+   socket.on('event',(data)=>{
+      console.log(data)
+   })
+   </script>
+   <body>Hello world</body>
+</html>

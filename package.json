@@ -23,6 +23,7 @@
     "fs-extra": "^9.0.1",
     "json-2-csv": "^3.7.6",
     "puppeteer": "^5.2.1",
-    "require-all": "^3.0.0"
+    "require-all": "^3.0.0",
+    "socket.io": "^2.3.0"
   }
 }
