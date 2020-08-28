@@ -20,6 +20,7 @@ exports.getLinkProducts = async function (req, res) {
 exports.crawlAllProduct = async function (req, res) {
     res.send(true)
     console.time("TimeCrawl")
+    const timeBegin = Date.now();
     const listAllProduct = [];
     const listLinkCategory = lib.generateListCategoryUrls(req.body.url, req.body.pageStart, req.body.pageEnd);
     const browser = await lib.browser.init();
@@ -59,6 +60,9 @@ exports.crawlAllProduct = async function (req, res) {
     await lib.browser.close(browser);
 
     console.timeEnd("TimeCrawl")
+    const timeEnd = Date.now();
+    const timeSpent = timeEnd - timeBegin;
+    console.log("Time exec: ", timeSpent)
 
     // write to json
     const filePath = path.join(root_dir + "/export/" + fileName + ".json")
@@ -81,7 +85,9 @@ exports.crawlAllProduct = async function (req, res) {
 
     await lib.createCSVFileFromJsonFile(fileName)
     services.socket.send(fileName, "done", {
-        fileName
+        fileName, 
+        timeSpent,
+        products: globalCount
     });
 
 }
