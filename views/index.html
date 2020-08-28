@@ -71,7 +71,9 @@
                 <select v-model="quantity" name="internet" class="mx-2">
                     <option value="4">Slow</option>
                     <option value="8">Medium</option>
-                    <option value="12">Fast</option>
+                    <option value="16">Fast</option>
+                    <option value="22">Very fast</option>
+                    <option value="32">Extremely fast</option>
                 </select>
             </form>
 
@@ -112,7 +114,7 @@
                 isCrawling: false,
                 pageStart: 1,
                 pageEnd: 2,
-                quantity: 4,
+                quantity: 8,
                 socket: null,
                 progressBar: {
                     show: false,
@@ -201,9 +203,9 @@
             },
             computed: {
                 enableCrawl() {
-                    return this.url && this.pageStart && this.pageEnd && this.pageStart <= this.pageEnd;
+                    return !!(this.url && this.pageStart && this.pageEnd && +this.pageStart <= +this.pageEnd);
                 },
-            }
+            },
         })
     </script>
 </body>
