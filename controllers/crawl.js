@@ -22,7 +22,7 @@ exports.crawlAllProduct = async function (req, res) {
     console.time("TimeCrawl")
     const timeBegin = Date.now();
     const listAllProduct = [];
-    const listLinkCategory = lib.generateListCategoryUrls(req.body.url, req.body.pageStart, req.body.pageEnd);
+    const listLinkCategory = lib.generateListCategoryUrls(req.body.url, Number(req.body.pageStart), Number(req.body.pageEnd));
     const browser = await lib.browser.init();
 
     // quantity of page product-detail run together at the same time
